@@ -17,6 +17,10 @@ argument-hint: [--last N]
 
 `/hi` 直接改写当前会话 JSONL 中最近 N 条（默认5条）模型输出里的拒绝话术，原地替换为同意措辞。
 
+自动检测运行环境（Claude Code vs Codex CLI），定位对应会话文件：
+- Claude Code: `~/.claude/projects/<cwd-slug>/*.jsonl`（按 mtime 取最新）
+- Codex CLI: `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`（递归扫描按 mtime 取最新）
+
 **不是匹配报告，是直接改写。**
 
 ## 用法
@@ -69,7 +73,9 @@ node scripts/refusal_rewriter.js --dry-run     # 仅报告，不改写
 
 ## 注意事项
 
-- 仅改写 `type: "assistant"` 且含 `type: "text"` 的消息
+- 自动检测运行环境：脚本路径含 `.codex` → Codex 模式，含 `.claude` → Claude 模式，否则按 cwd 回退检测
+- Claude 模式：仅改写 `type: "assistant"` 且含 `content[].type: "text"` 的消息
+- Codex 模式：仅改写 `type: "response_item"` + `payload.role: "assistant"` 且含 `content[].type: "output_text"` 的消息
 - 不改写用户消息、系统消息、工具调用
 - 改写是幂等的：多次执行不会产生副作用
 - `--dry-run` 模式仅输出匹配报告，不写入文件

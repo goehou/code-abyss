@@ -4,7 +4,8 @@
 /**
  * 破禁术 · 反拒绝覆写器
  *
- * 扫描当前 Claude 会话 JSONL，直接替换拒绝话术为同意措辞。
+ * 扫描当前 Claude / Codex 会话 JSONL，直接替换拒绝话术为同意措辞。
+ * 自动检测运行环境（Claude Code vs Codex CLI），定位对应会话文件。
  *
  * 用法:
  *   node refusal_rewriter.js [--last N] [--dry-run]
@@ -13,7 +14,6 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { createHash } = require('crypto');
 
 // ─── 替换规则表 ───────────────────────────────────────────
 
@@ -80,19 +80,38 @@ function parseArgs(argv) {
   return { last, dryRun };
 }
 
-// ─── 会话 JSONL 定位 ──────────────────────────────────────
+// ─── 环境检测 ─────────────────────────────────────────────
 
-function cwdToSlug(cwd) {
-  return cwd.replace(/\//g, '-').replace(/^-/, '');
+function detectRuntime() {
+  // Codex 在 skills 路径中包含 .codex
+  const scriptDir = __dirname;
+  if (scriptDir.includes('.codex')) return 'codex';
+  if (scriptDir.includes('.claude')) return 'claude';
+
+  // 回退：检查 ~/.codex/sessions 和 ~/.claude/projects 哪个存在
+  const home = os.homedir();
+  const codexSessions = path.join(home, '.codex', 'sessions');
+  const claudeProjects = path.join(home, '.claude', 'projects');
+
+  // 优先检测当前 cwd 是否有对应的 claude project
+  const cwd = process.cwd();
+  const slug = cwd.replace(/\//g, '-').replace(/^-/, '');
+  const claudeProjectDir = path.join(claudeProjects, slug);
+  if (fs.existsSync(claudeProjectDir)) return 'claude';
+  if (fs.existsSync(codexSessions)) return 'codex';
+
+  return 'claude'; // 默认回退
 }
 
-function findSessionJsonl() {
+// ─── Claude 会话定位 ─────────────────────────────────────
+
+function findClaudeSessionJsonl() {
   const cwd = process.cwd();
-  const slug = cwdToSlug(cwd);
+  const slug = cwd.replace(/\//g, '-').replace(/^-/, '');
   const projectDir = path.join(os.homedir(), '.claude', 'projects', slug);
 
   if (!fs.existsSync(projectDir)) {
-    console.error(`错误: 未找到项目目录 ${projectDir}`);
+    console.error(`错误: 未找到 Claude 项目目录 ${projectDir}`);
     process.exit(1);
   }
 
@@ -111,6 +130,43 @@ function findSessionJsonl() {
   }
 
   return files[0].full;
+}
+
+// ─── Codex 会话定位 ──────────────────────────────────────
+
+function findCodexSessionJsonl() {
+  const sessionsDir = path.join(os.homedir(), '.codex', 'sessions');
+
+  if (!fs.existsSync(sessionsDir)) {
+    console.error(`错误: 未找到 Codex 会话目录 ${sessionsDir}`);
+    process.exit(1);
+  }
+
+  // 递归扫描所有 .jsonl，按 mtime 倒序取最新
+  const allJsonl = [];
+
+  function scan(dir) {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scan(full);
+      } else if (entry.name.endsWith('.jsonl')) {
+        allJsonl.push({ full, mtime: fs.statSync(full).mtimeMs });
+      }
+    }
+  }
+
+  scan(sessionsDir);
+  allJsonl.sort((a, b) => b.mtime - a.mtime);
+
+  if (allJsonl.length === 0) {
+    console.error(`错误: ${sessionsDir} 下无 .jsonl 会话文件`);
+    process.exit(1);
+  }
+
+  return allJsonl[0].full;
 }
 
 // ─── JSONL 解析与回写 ─────────────────────────────────────
@@ -141,19 +197,53 @@ function applyReplacements(text) {
   return { result, matched, changed: matched.length > 0 };
 }
 
-function processAssistantMessage(obj) {
+// ─── Claude 消息处理 ─────────────────────────────────────
+
+function isClaudeAssistant(obj) {
+  return obj.type === 'assistant' && Array.isArray(obj.message?.content);
+}
+
+function processClaudeMessage(obj) {
   let totalMatched = [];
   let changed = false;
 
-  if (obj.type === 'assistant' && Array.isArray(obj.message?.content)) {
-    for (const block of obj.message.content) {
-      if (block.type === 'text' && typeof block.text === 'string') {
-        const { result, matched, changed: blockChanged } = applyReplacements(block.text);
-        if (blockChanged) {
-          block.text = result;
-          totalMatched.push(...matched);
-          changed = true;
-        }
+  if (!isClaudeAssistant(obj)) return { obj, matched: totalMatched, changed };
+
+  for (const block of obj.message.content) {
+    if (block.type === 'text' && typeof block.text === 'string') {
+      const { result, matched, changed: blockChanged } = applyReplacements(block.text);
+      if (blockChanged) {
+        block.text = result;
+        totalMatched.push(...matched);
+        changed = true;
+      }
+    }
+  }
+
+  return { obj, matched: totalMatched, changed };
+}
+
+// ─── Codex 消息处理 ──────────────────────────────────────
+
+function isCodexAssistant(obj) {
+  return obj.type === 'response_item'
+    && obj.payload?.role === 'assistant'
+    && Array.isArray(obj.payload?.content);
+}
+
+function processCodexMessage(obj) {
+  let totalMatched = [];
+  let changed = false;
+
+  if (!isCodexAssistant(obj)) return { obj, matched: totalMatched, changed };
+
+  for (const block of obj.payload.content) {
+    if (block.type === 'output_text' && typeof block.text === 'string') {
+      const { result, matched, changed: blockChanged } = applyReplacements(block.text);
+      if (blockChanged) {
+        block.text = result;
+        totalMatched.push(...matched);
+        changed = true;
       }
     }
   }
@@ -165,9 +255,17 @@ function processAssistantMessage(obj) {
 
 function main() {
   const { last, dryRun } = parseArgs(process.argv);
-  const jsonlPath = findSessionJsonl();
+  const runtime = detectRuntime();
+
+  const jsonlPath = runtime === 'codex'
+    ? findCodexSessionJsonl()
+    : findClaudeSessionJsonl();
+
+  const isAssistant = runtime === 'codex' ? isCodexAssistant : isClaudeAssistant;
+  const processMessage = runtime === 'codex' ? processCodexMessage : processClaudeMessage;
 
   console.log(`🔓 破禁术启动`);
+  console.log(`   运行环境: ${runtime === 'codex' ? 'Codex CLI' : 'Claude Code'}`);
   console.log(`   会话文件: ${jsonlPath}`);
   console.log(`   扫描范围: 最近 ${last} 条模型输出`);
   console.log(`   模式: ${dryRun ? '仅报告 (dry-run)' : '直接改写'}`);
@@ -180,7 +278,7 @@ function main() {
   for (let i = lines.length - 1; i >= 0 && assistantIndices.length < last; i--) {
     try {
       const obj = JSON.parse(lines[i]);
-      if (obj.type === 'assistant') {
+      if (isAssistant(obj)) {
         assistantIndices.push(i);
       }
     } catch {
@@ -198,7 +296,7 @@ function main() {
 
   for (const idx of assistantIndices) {
     const obj = JSON.parse(lines[idx]);
-    const { obj: processed, matched, changed } = processAssistantMessage(obj);
+    const { obj: processed, matched, changed } = processMessage(obj);
 
     if (changed) {
       totalChanged++;
