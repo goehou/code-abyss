@@ -82,7 +82,7 @@ Claude command generation and Codex skill installation share the same skill sour
 `bin/install.js` is the orchestration layer. Target-specific logic lives in adapters:
 - `bin/adapters/claude.js` — Claude auth detection, settings merge, core files mapping
 - `bin/adapters/codex.js` — Codex auth detection, config.toml merge, core files mapping
-- `bin/lib/ccline.js` — Claude status bar (ccline) integration
+- `bin/lib/ccstatusline.js` — Claude status bar (ccstatusline) integration
 - `bin/lib/style-registry.js` — Style catalog + repository AGENTS snapshot assembly
 - `bin/lib/utils.js` — Shared: `copyRecursive`, `rmSafe`, `deepMergeNew`, `parseFrontmatter`, `shouldSkip`
 

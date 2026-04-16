@@ -87,11 +87,11 @@ npx code-abyss --uninstall gemini  # 卸载 Gemini CLI
 ```
 ? 选择要安装的配置 (Press <space> to select, <enter> to submit)
 ◉ 精细合并推荐 settings.json (保留现有配置)
-◯ 安装 ccline 状态栏 (需要 Nerd Font)
+◯ 安装 ccstatusline 状态栏 (需要 Nerd Font)
 ```
 
 - **settings.json 精细合并**：逐项合并推荐配置，已有的 key 不覆盖，缺失的 key 补上
-- **ccline 状态栏**：自动安装 `@cometix/ccline` + `ccline --init` 生成配置 + 合并 statusLine 到 settings.json
+- **ccstatusline 状态栏**：自动部署 ccstatusline 预设配置 + 合并 statusLine 到 settings.json
 
 > 已有配置会自动备份到 `.sage-backup/`，卸载时一键恢复。
 
@@ -167,7 +167,7 @@ Code Abyss 是一套 **Claude Code / Codex CLI 邪修人格 + 多风格输出 + 
                                    └── bin/lib/       run_skill.js 依赖
 
 可选:
-├── ccline/            状态栏 (npm install -g @cometix/ccline)
+├── ccstatusline/      状态栏 (npx -y ccstatusline@latest)
 └── statusLine         自动合并到 settings.json
 ```
 
@@ -418,7 +418,7 @@ flowchart TD
 
 - `bin/install.js`：保留通用编排（参数解析、安装/卸载流程、备份恢复）
 - `bin/adapters/claude.js`：Claude 侧认证检测、settings merge、可选配置流程
-- `bin/lib/ccline.js`：Claude 侧状态栏与 ccline 集成
+- `bin/lib/ccstatusline.js`：Claude 侧状态栏与 ccstatusline 集成
 - `bin/adapters/codex.js`：Codex 侧认证检测、核心文件映射、config 模板流程
 - `bin/adapters/gemini.js`：Gemini 侧认证检测、settings merge、安装后可选配置
 - `bin/lib/style-registry.js`：输出风格 registry、默认风格解析、Gemini `GEMINI.md` 动态拼装

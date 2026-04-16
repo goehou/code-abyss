@@ -40,7 +40,7 @@ const {
   resolveStyle,
   renderGeminiContext,
 } = require(path.join(__dirname, 'lib', 'style-registry.js'));
-const { detectCclineBin, installCcline: _installCcline } = require(path.join(__dirname, 'lib', 'ccline.js'));
+const { detectCcstatusline, installCcstatusline } = require(path.join(__dirname, 'lib', 'ccstatusline.js'));
 const { installGstackClaudePack } = require(path.join(__dirname, 'lib', 'gstack-claude.js'));
 const { installGstackGeminiPack } = require(path.join(__dirname, 'lib', 'gstack-gemini.js'));
 
@@ -815,7 +815,7 @@ async function postClaude(ctx) {
     c,
     deepMergeNew,
     printMergeLog,
-    installCcline: _installCcline,
+    installCcstatusline,
   });
 }
 
@@ -995,7 +995,7 @@ if (require.main === module) {
 
 module.exports = {
   deepMergeNew, detectClaudeAuth, detectCodexAuth,
-  detectCclineBin, copyRecursive, shouldSkip, SETTINGS_TEMPLATE,
+  detectCcstatusline, copyRecursive, shouldSkip, SETTINGS_TEMPLATE,
   scanInvocableSkills,
   generateCommandContent,
   generateGeminiCommandContent,
