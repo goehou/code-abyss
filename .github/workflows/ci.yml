@@ -102,7 +102,7 @@ jobs:
 
           npx --yes --package "./$pkg_tgz" code-abyss --target codex -y
 
-          test ! -e "$abyss_home/.codex/AGENTS.md"
+          test -f "$abyss_home/.codex/AGENTS.md"
           test -d "$abyss_home/.agents/skills"
           test -d "$abyss_home/.agents/bin/lib"
           test -f "$abyss_home/.agents/skills/gstack/review/SKILL.md"

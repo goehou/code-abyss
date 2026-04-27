@@ -44,7 +44,7 @@ CI runs on Node 18/20/22: `npm ci && npm test && npm run verify:skills` plus all
 | Output Style | `output-styles/*.md` + `index.json` | Style registry + per-style templates |
 | Knowledge | `skills/**/*.md` | Domain skill documents + executable tools |
 
-`config/AGENTS.md` remains a repository snapshot, but Codex runtime installation no longer writes a generated `~/.codex/AGENTS.md`. Codex now runs in a `skills-only` shape and installs Code Abyss plus gstack under `~/.agents/skills/`.
+`config/AGENTS.md` remains a repository snapshot. Codex runtime installation writes a generated `~/.codex/AGENTS.md` containing persona + output style, and installs Code Abyss plus gstack under `~/.agents/skills/`.
 
 ### Skill Registry (Single Source of Truth)
 
@@ -131,7 +131,7 @@ aliases: vq                    # optional comma-separated aliases
 | Target | Config file | Skill artifacts | Style mechanism |
 |--------|-------------|-----------------|-----------------|
 | Claude | `~/.claude/CLAUDE.md` | `~/.claude/commands/*.md` + `~/.claude/skills/` | `settings.json.outputStyle` = slug |
-| Codex | `~/.codex/config.toml` | `~/.agents/skills/` + `~/.agents/skills/gstack/` | Skills-only runtime; no generated AGENTS.md |
+| Codex | `~/.codex/config.toml` | `~/.agents/skills/` + `~/.agents/skills/gstack/` | `~/.codex/AGENTS.md` (persona + style) |
 | Gemini | `~/.gemini/settings.json` | `~/.gemini/GEMINI.md` + `~/.gemini/commands/*.toml` + `~/.gemini/skills/` | Global context + TOML command runtime |
 
 Backups go to `<target-dir>/.sage-backup/` with `manifest.json`. Uninstall restores from backup.
