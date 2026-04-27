@@ -280,8 +280,11 @@ const GEMINI_COMMAND_TARGET = {
 };
 
 function getSkillPath(skillRoot, skillRelPath) {
-  return skillRelPath
-    ? `${skillRoot}/${skillRelPath}/SKILL.md`
+  const normalizedRelPath = skillRelPath
+    ? String(skillRelPath).split(path.sep).join('/')
+    : '';
+  return normalizedRelPath
+    ? `${skillRoot}/${normalizedRelPath}/SKILL.md`
     : `${skillRoot}/SKILL.md`;
 }
 

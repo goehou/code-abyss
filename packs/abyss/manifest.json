@@ -20,6 +20,12 @@
         { "src": "skills", "dest": "skills", "root": "codex" },
         { "src": "bin/lib", "dest": "bin/lib", "root": "codex" }
       ]
+    },
+    "gemini": {
+      "files": [
+        { "src": "skills", "dest": "skills", "root": "gemini" },
+        { "src": "bin/lib", "dest": "bin/lib", "root": "gemini" }
+      ]
     }
   }
 }
