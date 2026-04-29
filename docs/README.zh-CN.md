@@ -12,7 +12,7 @@
 
 </div>
 
-Code Abyss 为你的 AI 编程 CLI 注入可切换的人格 + 输出风格 + 工程技能体系。一条命令即可配置人格规则、输出风格、21 个领域技能、6 个斜杠命令和 5 个校验工具，覆盖 Claude Code、Codex CLI 和 Gemini CLI 三端。
+Code Abyss 为你的 AI 编程 CLI 注入可切换的人格 + 输出风格 + 工程技能体系。一条命令即可配置人格规则、主动执行导向、输出风格、26 个领域技能和 5 个校验工具，覆盖 Claude Code、Codex CLI 和 Gemini CLI 三端。
 
 ## 快速开始
 
@@ -43,15 +43,15 @@ Code Abyss 是一个三层配置系统：
 
 ## 人格系统
 
-5 个可切换人格，各有独特的性格和交互风格：
+5 个可切换人格，各有独特的性格、交互风格，并共享“主动补位、顺手闭环”的执行倾向：
 
 | 标识 | 名称 | 风格特点 |
 |------|------|----------|
-| `abyss`（默认） | 邪修红尘仙 | 直接、安全优先、不废话 |
-| `scholar` | 文言小生 | 古典、严谨、学者气质 |
-| `elder-sister` | 知性大姐姐 | 温柔、洞察、引导式 |
-| `junior-sister` | 古怪精灵小师妹 | 活泼、敏锐、跳脱 |
-| `iron-dad` | 铁壁暖阳 | 果断、温暖、结构化 |
+| `abyss`（默认） | 邪修红尘仙 | 直接、安全优先、主动收口 |
+| `scholar` | 文言小生 | 古典、严谨、主动校勘 |
+| `elder-sister` | 知性大姐姐 | 温柔、洞察、主动护栏 |
+| `junior-sister` | 古怪精灵小师妹 | 活泼、敏锐、主动推进 |
+| `iron-dad` | 铁壁暖阳 | 果断、温暖、主动兜底 |
 
 安装时切换人格：
 
@@ -80,18 +80,11 @@ npx code-abyss --list-styles    # 列出所有可用风格
 
 ## 技能体系
 
-21 个技能覆盖 14 个领域，以 `SKILL.md` frontmatter 为单一事实源。
+26 个技能覆盖 15 个领域，以 `SKILL.md` frontmatter 为单一事实源。
 
-### 斜杠命令（可直接调用）
+### 用户调用
 
-| 命令 | 功能 |
-|------|------|
-| `/verify-security` | 扫描代码安全漏洞和危险模式 |
-| `/verify-module` | 检查目录结构和文档完整性 |
-| `/verify-change` | 分析 Git 变更，检测文档同步问题 |
-| `/verify-quality` | 检测复杂度、命名、代码质量问题 |
-| `/gen-docs` | 自动生成 README.md 和 DESIGN.md 骨架 |
-| `/frontend-design` | UI 美学、组件模式、UX 指导 |
+核心技能默认按上下文自动路由，**不再默认暴露斜杠命令**。运行时会倾向于主动完成最近的安全闭环：检查、实现、验证、汇报。校验工具在需要时仍可直接从仓库执行。
 
 ### 领域知识（按上下文自动加载）
 
@@ -104,6 +97,7 @@ npx code-abyss --list-styles    # 列出所有可用风格
 | 前端 | 组件模式、状态管理、UI 美学、4 种设计系统变体 |
 | 移动端 | iOS/SwiftUI、Android/Compose、React Native、Flutter |
 | AI | Agent 开发、LLM 安全、RAG 系统、Prompt 工程 |
+| Office 文档 | Word、PDF、PowerPoint、Excel、OOXML、表单与表格自动化 |
 | 数据工程 | 管道编排、流处理、数据质量 |
 | 基础设施 | Kubernetes、GitOps、IaC（Terraform/Pulumi/CDK） |
 | 协同 | 多 Agent 任务分解与并行编排 |
@@ -114,14 +108,14 @@ npx code-abyss --list-styles    # 列出所有可用风格
 ~/.claude/                          ~/.codex/
 ├── CLAUDE.md        (人格)         ├── AGENTS.md       (人格 + 风格)
 ├── output-styles/   (风格文件)     ├── instruction.md   (核心指令)
-├── commands/*.md    (斜杠命令)     ├── skills/          (领域技能)
+├── commands/*.md    (可选命令)     ├── skills/          (领域技能)
 ├── skills/          (领域技能)     ├── bin/lib/          (运行时库)
 ├── bin/lib/         (运行时库)     ├── config.toml      (推荐配置)
 ├── settings.json    (配置)         └── .sage-uninstall.js
 └── .sage-uninstall.js
 ~/.gemini/
 ├── GEMINI.md        (人格 + 风格)
-├── commands/*.toml  (命令)
+├── commands/*.toml  (可选命令)
 ├── skills/          (领域技能)
 ├── settings.json    (配置)
 └── .sage-uninstall.js
@@ -181,7 +175,7 @@ node bin/packs.js uninstall <pack>       # 移除 pack 产物
 ---
 name: verify-quality          # kebab-case，全局唯一
 description: 代码质量校验关卡
-user-invocable: true           # false = 仅知识库
+user-invocable: false          # true 才会生成显式命令；当前核心默认不暴露
 allowed-tools: Bash, Read, Glob  # 可选，默认 Read
 argument-hint: <路径>          # 可选
 ---
@@ -190,17 +184,17 @@ argument-hint: <路径>          # 可选
 生成链：
 
 1. 注册表扫描并校验所有 `skills/**/SKILL.md`
-2. 筛选 `user-invocable: true` 用于命令生成
-3. Claude：渲染为 `~/.claude/commands/*.md`
-4. Codex：安装到 `~/.codex/skills/`，由 Codex 直接发现
-5. Gemini：渲染为 `~/.gemini/commands/*.toml`
+2. 仅 `user-invocable: true` 的 skill 会生成命令（当前核心默认无显式命令）
+3. Claude：仅在存在可调用 skill 时渲染 `~/.claude/commands/*.md`
+4. Codex：安装到 `~/.codex/skills/`，并由生成的 `AGENTS.md` + `instruction.md` 提供主动执行导向
+5. Gemini：仅在存在可调用 skill 时渲染 `~/.gemini/commands/*.toml`，并由生成的 `GEMINI.md` 提供主动执行导向
 6. 脚本型技能通过 `skills/run_skill.js` 执行（加锁 + spawn + 退出码透传）
 7. 知识型技能直接加载 `SKILL.md` 内容
 
 ## 开发
 
 ```bash
-npm test                          # Jest 测试套件（218 个测试）
+npm test                          # Jest 测试套件
 npm run verify:skills             # 校验 SKILL.md frontmatter 契约
 node bin/install.js --help        # 安装器帮助
 ```

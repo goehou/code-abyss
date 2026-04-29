@@ -50,8 +50,8 @@ describe('claude install smoke', () => {
     expect(result.status).toBe(0);
     expect(fs.existsSync(path.join(claudeDir, 'CLAUDE.md'))).toBe(true);
     expect(fs.existsSync(path.join(claudeDir, 'skills'))).toBe(true);
-    expect(fs.existsSync(path.join(claudeDir, 'commands'))).toBe(true);
-    expect(fs.existsSync(path.join(claudeDir, 'commands', 'gen-docs.md'))).toBe(true);
+    expect(fs.existsSync(path.join(claudeDir, 'commands'))).toBe(false);
+    expect(fs.existsSync(path.join(claudeDir, 'commands', 'gen-docs.md'))).toBe(false);
     expect(fs.existsSync(path.join(claudeDir, 'commands', 'review.md'))).toBe(false);
     expect(fs.existsSync(path.join(claudeDir, 'skills', 'gstack'))).toBe(false);
     expect(fs.existsSync(path.join(claudeDir, 'settings.json'))).toBe(true);
@@ -181,7 +181,7 @@ describe('gemini install smoke', () => {
     expect(result.status).toBe(0);
     expect(fs.existsSync(path.join(geminiDir, 'GEMINI.md'))).toBe(true);
     expect(fs.existsSync(path.join(geminiDir, 'skills'))).toBe(true);
-    expect(fs.existsSync(path.join(geminiDir, 'commands', 'gen-docs.toml'))).toBe(true);
+    expect(fs.existsSync(path.join(geminiDir, 'commands', 'gen-docs.toml'))).toBe(false);
     expect(fs.existsSync(path.join(geminiDir, 'commands', 'review.toml'))).toBe(false);
     expect(fs.existsSync(path.join(geminiDir, 'skills', 'gstack'))).toBe(false);
     expect(fs.existsSync(path.join(geminiDir, 'settings.json'))).toBe(true);

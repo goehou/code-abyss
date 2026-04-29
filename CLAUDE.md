@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code Abyss is an npm package that installs a "邪修红尘仙" persona configuration into Claude Code, Codex CLI, and Gemini CLI. It delivers: persona rules, 4 switchable output styles, 56 skill documents, and 5 executable verification/generation tools.
+Code Abyss is an npm package that installs persona configuration plus proactive execution guidance into Claude Code, Codex CLI, and Gemini CLI. It delivers: persona rules, 5 switchable output styles, 26 skills, and 5 executable verification/generation tools.
 
 ## Commands
 
@@ -71,11 +71,11 @@ Project-level automatic pack sync is driven by `.code-abyss/packs.lock.json`. Th
 
 The installer generates different artifacts per target CLI:
 
-- **Claude**: `~/.claude/commands/*.md` (slash commands) — `runtimeType=scripted` calls `run_skill.js`, `knowledge` reads SKILL.md directly
-- **Codex**: `~/.codex/skills/**/SKILL.md` — Code Abyss installs core skills directly under the Codex managed skills directory; optional packs may add their own runtime artifacts when declared
-- **Gemini**: `~/.gemini/GEMINI.md` + `~/.gemini/commands/*.toml` + `~/.gemini/skills/**/SKILL.md` — Gemini reads persistent context from `GEMINI.md` and custom commands from TOML files
+- **Claude**: `~/.claude/commands/*.md` (optional slash commands) — `runtimeType=scripted` calls `run_skill.js`, `knowledge` reads SKILL.md directly
+- **Codex**: `~/.codex/skills/**/SKILL.md` — Code Abyss installs core skills directly under the Codex managed skills directory; generated `AGENTS.md` + `instruction.md` provide proactive execution guidance
+- **Gemini**: `~/.gemini/GEMINI.md` + `~/.gemini/commands/*.toml` + `~/.gemini/skills/**/SKILL.md` — Gemini reads persistent context from `GEMINI.md`; commands are optional and generated only for invocable skills
 
-Claude command generation and Codex skill installation share the same skill source tree; only Claude filters on `user-invocable` to emit slash commands.
+Claude command generation and Codex/Gemini skill installation share the same skill source tree; only `user-invocable: true` skills emit explicit commands, and the current core set defaults to none.
 
 ### Adapter Pattern
 
@@ -104,7 +104,7 @@ Knowledge-type skills are read-only — no script execution, just load SKILL.md 
 ---
 name: verify-quality          # kebab-case, unique across all skills
 description: Code quality gate
-user-invocable: true           # false = knowledge-only, not exposed as Claude slash command
+user-invocable: false          # true = explicit command; false = knowledge-only / auto-routed by context
 allowed-tools: Bash, Read, Glob  # optional, default: Read
 argument-hint: <scan-path>     # optional
 aliases: vq                    # optional comma-separated aliases
@@ -130,8 +130,8 @@ aliases: vq                    # optional comma-separated aliases
 
 | Target | Config file | Skill artifacts | Style mechanism |
 |--------|-------------|-----------------|-----------------|
-| Claude | `~/.claude/CLAUDE.md` | `~/.claude/commands/*.md` + `~/.claude/skills/` | `settings.json.outputStyle` = slug |
+| Claude | `~/.claude/CLAUDE.md` | `~/.claude/commands/*.md` (optional) + `~/.claude/skills/` | `settings.json.outputStyle` = slug |
 | Codex | `~/.codex/config.toml` | `~/.codex/skills/` | `~/.codex/AGENTS.md` (persona + style) |
-| Gemini | `~/.gemini/settings.json` | `~/.gemini/GEMINI.md` + `~/.gemini/commands/*.toml` + `~/.gemini/skills/` | Global context + TOML command runtime |
+| Gemini | `~/.gemini/settings.json` | `~/.gemini/GEMINI.md` + `~/.gemini/commands/*.toml` (optional) + `~/.gemini/skills/` | Global context + TOML command runtime |
 
 Backups go to `<target-dir>/.sage-backup/` with `manifest.json`. Uninstall restores from backup.

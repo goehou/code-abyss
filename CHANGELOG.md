@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.6] - 2026-04-29
+
+### Added
+- 并入 Office 文档能力到 core skills：新增 `skills/domains/office/` 总索引，以及 `office-docx` / `office-pdf` / `office-pptx` / `office-xlsx` 四个子 skill，覆盖 Word、PDF、PowerPoint、Excel 与 OOXML 文档自动化场景。
+- `config/CLAUDE.md`、`config/AGENTS.md`、`config/instruction.md` 与 5 个人格文件统一增强“主动协助 / 主动补位 / 顺手闭环”执行导向。
+
+### Changed
+- core skills 默认不再暴露任何 `user-invocable` 命令；`frontend-design`、`gen-docs`、`verify-change`、`verify-module`、`verify-quality`、`verify-security` 以及 Office 相关 skills 全部改为上下文自动路由。
+- README、中文 README、CLAUDE、运行时 guidance 与安装布局文档统一更新到当前口径：26 skills / 15 domains / optional commands / proactive runtime guidance。
+- Claude / Gemini 安装行为同步收敛：仅在存在 `user-invocable: true` skills 时才生成 `commands/` 产物；当前 core 默认无显式命令。
+
+### Fixed
+- 修复 `config/personas/elder-sister.md` 内容缺口，补齐执行链、验证链、技能路由与收口约束。
+- 修正项目文档中的历史陈旧表述（如旧 skills 数量、旧斜杠命令暴露口径、旧运行时说明），避免安装后行为与仓库说明漂移。
+
+### Verification
+- Jest: **22 suites / 220 tests passed**（1 skipped）
+- Skill contract gate: `npm run verify:skills` — 26 skills 通过
+
 ## [2.1.5] - 2026-04-28
 
 ### Changed
