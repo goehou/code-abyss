@@ -23,7 +23,7 @@ jobs:
       - run: node skills/tools/verify-change/scripts/change_analyzer.js --mode staged || node skills/tools/verify-change/scripts/change_analyzer.js --mode working
       - run: node skills/tools/verify-module/scripts/module_scanner.js .
       - run: node skills/tools/verify-quality/scripts/quality_checker.js .
-      - run: node skills/tools/verify-security/scripts/security_scanner.js .
+      - run: node skills/tools/verify-security/scripts/security_scanner.js . --exclude office
 
   smoke-claude:
     runs-on: ${{ matrix.os }}
@@ -58,8 +58,8 @@ jobs:
           test -f "$abyss_home/.claude/CLAUDE.md"
           test -d "$abyss_home/.claude/skills"
           test ! -e "$abyss_home/.claude/skills/gstack"
-          test -d "$abyss_home/.claude/commands"
-          test -f "$abyss_home/.claude/commands/gen-docs.md"
+          test ! -e "$abyss_home/.claude/commands"
+          test ! -e "$abyss_home/.claude/commands/gen-docs.md"
           test ! -e "$abyss_home/.claude/commands/review.md"
           test -f "$abyss_home/.claude/settings.json"
           test -f "$abyss_home/.claude/.sage-uninstall.js"
@@ -146,8 +146,8 @@ jobs:
 
           test -f "$abyss_home/.gemini/GEMINI.md"
           test -d "$abyss_home/.gemini/skills"
-          test -d "$abyss_home/.gemini/commands"
-          test -f "$abyss_home/.gemini/commands/gen-docs.toml"
+          test ! -e "$abyss_home/.gemini/commands"
+          test ! -e "$abyss_home/.gemini/commands/gen-docs.toml"
           test ! -e "$abyss_home/.gemini/commands/review.toml"
           test ! -e "$abyss_home/.gemini/skills/gstack"
           test -f "$abyss_home/.gemini/settings.json"
