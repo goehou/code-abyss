@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.1.8] - 2026-04-29
+
 ### Added
 - 新增 `openclaw` 安装 target，并接入 `bin/lib/target-registry.js`、style registry、pack registry 与 bootstrap snippets 的统一目标枚举。
 - 新增 `bin/adapters/openclaw.js`，负责 OpenClaw CLI / config 探测、`~/.openclaw/openclaw.json` 解析，以及 workspace 路径解析。
